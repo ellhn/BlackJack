@@ -1,0 +1,215 @@
+<!doctype html>
+<html ng-app="myApp">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<title>Blackjack</title>
+        <script src="https://code.angularjs.org/1.5.3/angular.min.js"></script>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="css/blackjack.css">
+		<script type="text/javascript">
+			window.shuffle = function (set) {
+				var length = set.length;
+				var shuffled = new Array(length);
+				for (var index = 0, rand; index < length; index++) {
+					rand = Math.floor(Math.random() * (index + 1));
+					if (rand !== index) shuffled[index] = shuffled[rand];
+					shuffled[rand] = set[index];
+				}
+				return shuffled;
+			}
+		</script>
+	</head>
+	<body ng-controller="myController">
+		<div class="container-fluid">
+			<div class="row">
+				<nav class="navbar navbar-default">
+					<div class="navbar-header">
+						<a class="navbar-brand" href="#">Blackjack</a>
+					</div>
+					<div class="navbar-collapse">
+						<button type="button" ng-click="startNewGame()" class="btn btn-default navbar-btn new-game">New Game</button>
+					</div>
+				</nav>
+			</div>
+			<!--
+			template(s) for result banner
+			<div class="result alert alert-warning">PLAYER LOSES</div>
+			-->
+            <div ng-if="finalMessage!==''" class="result alert" ng-class="{'alert-danger':finalMessage==='PLAYER LOSES',
+            'alert-info':finalMessage==='DRAW','alert-success':finalMessage==='PLAYER WINS'} ">{{finalMessage}}</div>
+			<div class="row">
+				<div class="col-md-10">
+					<div class="dealer panel panel-default">
+						<div class="panel-heading">Dealer
+							<div class="pull-right">
+								<span>Score:</span>
+								<span class="score">{{dealerScore}}</span>
+							</div>
+						</div>
+						<div class="cards panel-body">
+							<!--
+							template for a card
+							<div class="card DQ"></div>
+							-->
+                            <div class="card" ng-repeat="card in dealerCards" ng-class="dealerCards[$index]"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-10">
+					<div class="player panel panel-default">
+						<div class="panel-heading">Player
+							<div class="pull-right">
+								<span>Score:</span>
+								<span class="score">{{playerScore}}</span>
+							</div>
+						</div>
+						<div class="cards panel-body">
+							<!--
+							template for a card
+							<div class="card D3"></div>
+							-->
+                            <div class="card" ng-repeat="card in playerCards" ng-class="playerCards[$index]"></div>
+						</div>
+						<div class="panel-footer">
+							<div class="btn-group btn-group-sm btn-group-justified">
+								<a class="btn btn-default hit" ng-class="{'disabled':!(enableButtons)}" ng-click="hitButton()">Hit</a>
+								<a class="btn btn-default stick" ng-class="{'disabled':!(enableButtons)}" ng-click="stickButton()">Stick</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+        <script type="text/javascript">
+		 angular.module('myApp', []).
+		 controller('myController', ['$scope', function ($scope) {
+		    var Deck=['C10','D10','H10','S10','C2','D2','H2','S2','C3','D3','H3','S3','C4','D4','H4','S4','C5','D5','H5','S5','C6','D6','H6','S6',
+			'C7','D7','H7','S7','C8','D8','H8','S8','C9','D9','H9','S9','CA','DA','HA','SA','CJ','DJ','HJ','SJ','CK','DK','HK','SK','CQ','DQ','HQ','SQ'];
+		    $scope.finalMessage='';
+			
+		    function blackJackGame(){
+				this.Deck=shuffle(Deck);
+			    this.dealer=new Player('dealer');
+				this.player=new Player('player');	
+			}
+			
+			function Player(name){
+				this.name=name;
+			    this.score=[0,0];
+				this.aces=0;
+				this.cards=[];	
+			}
+			
+			Player.prototype.Hit=function(value,arr){
+				self=this;
+				this.cards.push(arr[value]);
+			    if (arr[value].slice(1)==='J' || arr[value].slice(1)==='K' || arr[value].slice(1)==='Q') {
+					this.score[0]+=10;
+					this.score[1]+=10;
+					calculate(self);
+				}    
+				else if (arr[value].slice(1)==='A') {
+					this.aces++;
+					if (this.aces>1) {
+						this.score[0]++;
+						this.score[1]++;
+					}
+					else { 
+						this.score[0]++;
+						this.score[1]+=11;
+					}
+				    calculate(self);
+				}
+				else {
+					this.score[0]+=parseInt(arr[value].slice(1));
+					this.score[1]+=parseInt(arr[value].slice(1));+
+				    calculate(self);
+				}				
+			};   //end of Player.prototype.Hit
+			
+			function calculate(self){
+			   if (self.name==='player') {
+				 if (self.score[0]===self.score[1]) {
+					  $scope.playerScore=self.score[0];
+					  $scope.playerCards=self.cards;
+				 }
+				 else {
+					 if (self.score[1]<=21) {
+					   $scope.playerScore=self.score[0]+'/'+self.score[1];
+					   $scope.playerCards=self.cards;
+					 }
+					 else {
+					   self.score[1]=self.score[0];	 
+					   $scope.playerScore=self.score[0];
+					   $scope.playerCards=self.cards; 
+					 }
+				 }
+			   }
+			   if (self.name==='dealer') {
+				 if (self.score[0]===self.score[1]) {
+					  $scope.dealerScore=self.score[0];
+					  $scope.dealerCards=self.cards;
+				 }
+				 else {
+					 if (self.score[1]<=21) {	 
+					   $scope.dealerScore=self.score[0]+'/'+self.score[1];
+					   $scope.dealerCards=self.cards;
+					 }
+					 else {
+					   self.score[1]=self.score[0];
+					   $scope.dealerScore=self.score[0];
+					   $scope.dealerCards=self.cards; 
+					 }
+				 }	
+			   }
+			}    //end of calculate
+			
+			$scope.startNewGame=function (){
+				$scope.finalMessage='';
+				var counter=3;
+				var Game=new blackJackGame();
+				Game.player.Hit(0,Game.Deck);
+				Game.dealer.Hit(1,Game.Deck);
+				Game.player.Hit(2,Game.Deck);
+				$scope.enableButtons=true;	
+					
+				$scope.hitButton=function (){
+					Game.player.Hit(counter,Game.Deck);
+					if (Game.player.score[0]>21){
+						$scope.finalMessage="PLAYER LOSES";
+						$scope.enableButtons=false;
+					}
+					else
+					  counter++;
+				};
+				
+				$scope.stickButton=function (){
+					$scope.enableButtons=false;
+					$scope.playerScore=Game.player.score[1];
+					while (Game.dealer.score[1]<17){
+					   	Game.dealer.Hit(counter,Game.Deck);
+						counter++;
+					}
+					$scope.dealerScore=Game.dealer.score[1];
+				    if ($scope.dealerScore>21){
+						$scope.finalMessage="PLAYER WINS";
+					}
+					else if ($scope.dealerScore>$scope.playerScore){
+						$scope.finalMessage="PLAYER LOSES";
+					}
+					else if ($scope.dealerScore<$scope.playerScore){
+						$scope.finalMessage="PLAYER WINS";
+					}
+					else {
+						$scope.finalMessage="DRAW";
+					}
+			    };
+			};  //end of $scope.startNewGame
+		 }]);
+		</script>
+	</body>
+</html>
