@@ -104,7 +104,7 @@
 				  this.cards = [];
 			  }
 		  
-			  Player.prototype.Hit = function(value, arr) {
+			  Player.prototype.hit = function(value, arr) {
 				  this.cards.push(arr[value]);
 				  if (arr[value].slice(1) === 'J' || arr[value].slice(1) === 'K' || arr[value].slice(1) === 'Q') {
 					  this.score[0] += 10;
@@ -125,48 +125,48 @@
 					  this.score[1] += parseInt(arr[value].slice(1)); +
 					  this.calculate();
 				  }
-			  }; //end of Player.prototype.Hit
+			  }; //end of Player.prototype.hit
 		  
 			  Player.prototype.calculate = function() {
-					  if (this.name === 'player') {
-						  $scope.playerCards = this.cards;
-						  if (this.score[0] === this.score[1]) {
+				  if (this.name === 'player') {
+					  $scope.playerCards = this.cards;
+					  if (this.score[0] === this.score[1]) {
+						  $scope.playerScore = this.score[0];
+					  } else {
+						  if (this.score[1] <= 21) {
+							  $scope.playerScore = this.score[0] + '/' + this.score[1];
+						  } else {
+							  this.score[1] = this.score[0];
 							  $scope.playerScore = this.score[0];
-						  } else {
-							  if (this.score[1] <= 21) {
-								  $scope.playerScore = this.score[0] + '/' + this.score[1];
-							  } else {
-								  this.score[1] = this.score[0];
-								  $scope.playerScore = this.score[0];
-							  }
 						  }
 					  }
-					  if (this.name === 'dealer') {
-						  $scope.dealerCards = this.cards;
-						  if (this.score[0] === this.score[1]) {
+				  }
+				  if (this.name === 'dealer') {
+					  $scope.dealerCards = this.cards;
+					  if (this.score[0] === this.score[1]) {
+						  $scope.dealerScore = this.score[0];
+					  } else {
+						  if (this.score[1] <= 21) {
+							  $scope.dealerScore = this.score[0] + '/' + this.score[1];
+						  } else {
+							  this.score[1] = this.score[0];
 							  $scope.dealerScore = this.score[0];
-						  } else {
-							  if (this.score[1] <= 21) {
-								  $scope.dealerScore = this.score[0] + '/' + this.score[1];
-							  } else {
-								  this.score[1] = this.score[0];
-								  $scope.dealerScore = this.score[0];
-							  }
 						  }
 					  }
-				  } //end of Player.prototype.calculate
+				  }
+			  } //end of Player.prototype.calculate
 		  
 			  $scope.startNewGame = function() {
 				  $scope.finalMessage = '';
 				  var counter = 3;
 				  var Game = new blackJackGame();
-				  Game.player.Hit(0, Game.Deck);
-				  Game.dealer.Hit(1, Game.Deck);
-				  Game.player.Hit(2, Game.Deck);
+				  Game.player.hit(0, Game.Deck);
+				  Game.dealer.hit(1, Game.Deck);
+				  Game.player.hit(2, Game.Deck);
 				  $scope.enableButtons = true;
 		  
 				  $scope.hitButton = function() {
-					  Game.player.Hit(counter, Game.Deck);
+					  Game.player.hit(counter, Game.Deck);
 					  if (Game.player.score[0] > 21) {
 						  $scope.finalMessage = "PLAYER LOSES";
 						  $scope.enableButtons = false;
@@ -178,7 +178,7 @@
 					  $scope.enableButtons = false;
 					  $scope.playerScore = Game.player.score[1];
 					  while (Game.dealer.score[1] < 17) {
-						  Game.dealer.Hit(counter, Game.Deck);
+						  Game.dealer.hit(counter, Game.Deck);
 						  counter++;
 					  }
 					  $scope.dealerScore = Game.dealer.score[1];
